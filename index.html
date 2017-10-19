@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1m shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    
+    <link rel="manifest" href="%PUBLIC_URL%/manifes.json">
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+    
+    <title>three.js canvas - tute2</title>
+    
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body>
+    <!-- the Flux JS SDK and helpers-->
+    <script src="https://unpkg.com/flux-sdk-browser@0.4/dist/flux-sdk-min.js"></script>
+    <script src="https://unpkg.com/flux-sdk-helpers@0.1/dist/flux-sdk-helpers.min.js"></script>
+    <ul class="sidebar">
+        <li class="sidebar-brand"></li>
+        <li><strong>Name</strong></li>
+        <form class="text-form">
+            <div>
+                <input type="text" id="textInput" href="#" value="Anonymous">
+            </div>
+        </form>
+        <li><strong>Comment here</strong></li>
+        <form class="text-form" readOnly>
+            <div>
+                <textarea id="textAreaDiv" href="#" rows="5" ></textarea>
+                <input type="submit">
+            </div>
+        </form>
+        <br><br>
+        <li><strong>List of Comments</strong></li>
+        <br>
+        <textarea id="comments" rows="25"></textarea>
+    </ul>
+    <div id="menu"></div>
+
+    <script src="build/three.js"></script>
+    <script src="js/renderers/Projector.js"></script>
+    <script src="js/renderers/CanvasRenderer.js"></script>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/controls/OrbitControls.js"></script>
+    <script src="js/jquery-1.9.1.js"></script>
+    
+<!--Three.js Scene-->
+    
+    <script>
+    var container;
+    var geo, material, sphere;
+    var spheres = [];
+    var camera, scene, renderer;
+    var particleMaterial, paricleMaterialSelected;
+    var particle;
+    var particles = [];
+    var messages = {};
+    var particleMessages = [];
+    var selectedId;
+    var spriteys = [];
+
+    var numbers = [];
+    var controls;
+
+    var raycaster;
+    var mouse;
+
+    var objects = [];
+    var subObjects = [];
+    var jFiles = [];
+    var subFolders = [];
+
+    var jsonFile;
+    var jsonFiles = [];
+
+    var textInput, textAreaDiv;
+
+    init();
+    animate();
+
+    /**
+    * Intialises the content and eventlistener functions of three.js
+    * Loads JSON files into three.js scene
+    */
+
+    function init() {
+
+        textInput = document.getElementById('textInput');
+        textInput = document.getElementById('textInput');
+        textAreaDiv = document.getElementById('textAreaDiv');
+
+        textInput.disabled = true;
+        textAreaDiv.disabled = true;
+
+        /**
+        * Basic setup for three.js scene
+        * @ renderer - can be replaced with webgl renderer
+        */
+
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(0, 10, 25);
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x4c4b4b);
+
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
+        renderer = new THREE.CanvasRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        //Folder names - will be unnecessary
+
+        subFolders = ["karamba","beams","connection nodes","joint nodes"];      
+
+        //Json File names - will be unnecessary
+
+        jFiles = [
+            ['01daba08-3022-4401-8d45-99a70f2e7c63.json', '03b51e5d-c9a7-4bc4-94c4-37246962f789.json', '0669a929-65cd-4ca7-8782-e9669944738d.json', '07d015c6-faff-4307-924e-d93723338564.json', '0860eca8-72dc-41c2-b889-0f7c41415cd3.json', '0a89c58c-2a41-42b7-bc01-a81c3f97c0c0.json', '0f6fc17c-ab0f-4e72-9ddf-a306b01f176c.json', '0f9f2547-c41c-415c-ad3b-2c387357649c.json', '12ca01c7-66de-424a-85f3-46455c3cf8ca.json', '1fe2429d-2a69-45bd-ba9f-3578681f6b29.json', '22afdff8-e0e3-43d2-979e-2e07ce70f2b9.json', '24224362-5678-4c46-91ce-a481c6249a55.json', '279ac0bc-fe12-445b-a5ba-c22f69280019.json', '28a093dd-2624-4f85-bea3-b2900ab6a2f5.json', '298947f7-1540-4575-81a4-b2d2fdef5f19.json', '2b56b30b-1aa2-47b5-b77f-4b310986177e.json', '2c83e8bd-bb73-4c17-a17a-7e38837e923c.json', '2e0f148d-90da-421c-8465-3c894ace6035.json', '319e5add-cbb1-4cdd-9b02-afafe02e2914.json', '3361def2-c040-4d53-bc93-38e61cc062b9.json', '33dea442-95b0-4d5b-95c1-d7f43869f404.json', '386a27c2-a6d2-4fba-b553-b6dc3d9670fd.json', '3ab7a673-7ddc-4a94-9ea2-bea406eee8f1.json', '3ddc9943-baa6-4242-848e-c277a2bbaabb.json', '3fa05c4e-364c-41f6-a164-41f4491efc0d.json', '406af8ab-441a-4b53-b6ea-676851a3d074.json', '47d852ae-3f09-47c7-a794-c475d887b00e.json', '4ca2ddf7-a4d4-40d7-ac04-4f143ee746d5.json', '4e45e030-8cc1-4c0e-bc86-4fddbc2320d0.json', '545a5e3c-0512-46dd-9d67-373516bd0dfd.json', '5b8d010f-aff2-4652-84b4-dc0d282337d2.json', '5e0e05bc-a4cf-4145-bca8-1e93f48e4985.json', '5ef12c92-e446-47f9-acae-f432eb695511.json', '5ff0fbfa-4687-47a1-9ab1-9abfc899221b.json', '60e0e2d3-6e25-4e7c-addf-943d754863eb.json', '61807c76-22a2-4a69-a06c-e4c087594a81.json', '6b468505-71d1-43b7-afc5-1e85d9a222ec.json', '6ee46216-4909-454d-942c-68b1c4d8f383.json', '6fed9525-e447-4e74-9656-c2273db56d71.json', '70731b46-71cf-4a81-b08b-0dcc02f13d04.json', '7136c21f-da91-4f2c-bb43-5b35a5a8f0a8.json', '732e4dfd-f37d-4ee1-9344-999e5ffe0083.json', '7333a9be-90a9-4c25-bb40-d6be5d82a812.json', '786c6630-2a16-4eff-96ca-f732532fb0e0.json', '7b487d36-4641-4b1d-83c0-ddccd545ff8d.json', '7cecde17-3e6f-43ea-9533-740513827687.json', '84b22223-5c07-4fd9-a1af-bac48108e8ba.json', '88ef932b-4efc-4089-96b2-d0ce1cad259b.json', '8f897f92-061a-43aa-bc3b-6fd5de239a74.json', '9004549a-4de2-4faf-9fd1-6f1717438b75.json', '9145836f-57cd-436b-8b1a-8eec7d148f66.json', '9501a63e-6c8c-4f03-8949-5e659c1edddc.json', '9a111711-d1f9-487b-925a-9464e8e1ab98.json', '9a682768-08eb-4aa0-ac43-53081a52c081.json', '9ae9a6db-d69b-4d95-b23d-b09cfcf585be.json', '9baa92bd-280b-482a-9943-46e8e820fa09.json', '9f9152e8-6ae6-4e85-8eb7-ed8c504c21e5.json', 'a0c3682e-4df0-4189-8136-dc6bfe2f237f.json', 'a181059e-a4f8-4548-b28b-c6819ec80374.json', 'a2405ae7-9c56-47fa-955a-bb1a1da41f11.json', 'a24118e4-3fba-4afe-9ee5-dd1bc5ed8b36.json', 'ab3709a5-cf36-40c0-8a32-a571940afa60.json', 'af8338cf-70dd-4f79-94c6-30b3f0401bea.json', 'b30fee8e-de38-43de-9f35-7157f9f77ae6.json', 'b313c604-0a9d-4598-a34a-981e5133b432.json', 'b4cefc7c-3061-49d9-a1e9-850eafbcbade.json', 'b4e6400d-eb35-448f-be68-d112e4763202.json', 'b5f2f7bd-9793-49aa-9812-e12c1d830214.json', 'b6b2b5d6-4386-4ae5-92ef-4619d29c84ba.json', 'bd2fc39e-4045-41d4-a2f6-707eb6acb56c.json', 'c5d13668-9da7-42d2-bb47-4f41acddb47f.json', 'c60b3ff6-86f8-40c7-8f3a-2e10077415f1.json', 'cb9e2072-3fb7-4aac-b39d-e3c7a3841460.json', 'cc563bfd-e522-4dd4-b99a-1f45e585b478.json', 'd64c88a7-7d33-46a3-9ae1-23cb6bb82667.json', 'd6e07591-b588-4f5d-814c-ffc00a8d3f07.json', 'dc622484-cc2b-4d6b-a665-0adfbc3dbcd9.json', 'df531c0a-17c4-4ea0-9072-c36b97c2b612.json', 'df5f807c-e0d6-4995-81e7-c868a36cea82.json', 'e35bf8ec-f2b5-4a4b-bc5c-7aa494a82c80.json', 'e3db7d12-1b84-40c9-9004-288ff3b41c4d.json', 'e4174faa-7bf3-466f-ac9c-28091e14b392.json', 'e5a7445f-416e-4562-9436-32d39bc0ee49.json', 'e6614ea9-2bec-4c8f-ad05-852995ab2680.json', 'e7ff1699-1dfe-42b7-ad0b-ede6f85e7bb9.json', 'f2919a41-0705-4d41-8c7d-83317fa925d9.json', 'f32377fc-820b-40e6-b353-cd9449dead71.json', 'fba7e1b1-6137-4100-8f4a-700a5b0ee692.json'],
+            ['0e8b7519-412c-43c1-873d-da05870af5f2.json', '0ec58c7a-ab0b-42b3-a033-a50009406af1.json','1b75ed2d-dd6b-449e-a3cd-335cd6fe432b.json', '1eb47374-1401-4076-9906-0ca33ea192bf.json', '2bd5bb15-8a94-4887-a621-5127bd8aacc9.json', '4cd20d7f-9ec6-4be2-93e5-dd44e8e4a0eb.json', '4ea62cc4-cb50-4c5c-b36f-03309ec5234e.json', '5e4c0871-1501-4ae3-a8b9-0fe0ef3c36eb.json', '7f7bc517-3491-4bdc-8efe-5a8db2c47575.json', '9e0a3f62-7eb1-430e-af6d-80be74dc47c3.json', '9fcf6760-6941-4b5f-8e57-c0bdac3bd6ba.json', '081a014a-5044-43db-a0d0-af9479ee6310.json', '645cbd65-5261-4797-9c05-993336b905f0.json', '9290d480-d5b6-4a3b-8ade-41a2476861d6.json', '9836e237-8162-4291-a4e8-3a6706ee0568.json', '25875a18-1e78-43ff-a22f-c4dad75014d3.json', '642496e7-014e-4e16-99c1-ad1094bc81fe.json', '4141830c-7fd8-494f-a769-783ecd7d622f.json', 'a0fd4a0c-a9b3-494a-9cc7-118359542c38.json', 'b3f685b1-0ea5-4f54-8f18-cdd43792a64f.json', 'b3115d09-e2ef-4d33-9309-9874bee7d8bc.json', 'b230793f-60be-49be-adec-7e8e2c6bfb5e.json', 'c248ab66-5f96-4472-a407-aa6637c61071.json', 'c23434ce-fdb9-49c3-93e1-ce06881a6121.json', 'd2e88d2f-36a9-404e-a0ed-e191e9c06ffa.json', 'd8f3fa2f-32b5-447a-a189-60178fdac782.json', 'df2f3b46-86d3-4b50-bd75-19e6563e58dc.json', 'ec2ee7ed-bdc9-424b-88c2-e833a3812ab8.json', 'ecebd667-17d0-44f7-a944-e38d98405237.json', 'f51ce994-44c4-4c15-98db-5c47453fb560.json', 'f88c5679-3630-4e07-af04-9f7a04b47b2d.json', 'ff564670-e3e2-4b03-b30e-82c05e2e2d2a.json'],
+            ['030254b4-a497-4541-bbe3-5eae0e634058.json', '039195ee-f319-4106-ac5d-7c0078e2c525.json', '068f48fb-e9a8-4c9f-aa7f-30ff848e4b38.json', '077a260a-0e3d-4b50-a184-4ec9d50167b8.json', '0cbf1838-146a-4a7e-b07a-c13160cc74d1.json', '151588e8-ec6a-4dc7-85fb-66f58568f5f1.json', '157259ea-7372-40cc-b366-e5ddaae7cd67.json', '15c46d38-00cc-4c56-9410-6d53a2413d5e.json', '18f0c7b2-3592-4b8a-ba2c-a7048fcfd6b6.json', '1a9fb25a-3ac4-4036-bd19-6cbd54c0ae93.json', '204ec9c7-80a8-404a-ac99-621bff652ffc.json', '2689616a-8a83-473f-9011-58bb131549bd.json', '30d9e5bd-62a5-4409-9ad7-53553bc45b11.json', '36a2bc80-6d36-4c68-a23b-90cf170111cb.json', '37da5093-7d32-43d1-b651-04c2ca325366.json', '423a071f-1098-4131-998b-f388b7b6a444.json', '49282bac-b9cf-488b-9998-d492a2d9ebf1.json', '4b4a3bee-5cdf-4457-b3c0-c9313e9bffed.json', '4c04105e-4004-4f39-83d2-c16067f83a2b.json', '4ce85a0a-5f43-40e3-88a9-2f791cf1cf60.json', '4e4b869b-b037-4147-82bd-28dad7f55ff0.json', '4fa53ac7-a9be-4742-aa8b-9645744bfdff.json', '50a98d52-9dae-4da4-93f3-5bcb7dd3acbf.json', '522156ab-fed8-4d61-ae76-64e975585ffa.json', '5389d255-b262-46f4-b55e-7cddec38936a.json', '586b145a-1f37-4533-bfed-ec4084137f32.json', '5a82b1fa-1a89-4bdd-9dc9-db823c25380d.json', '5b54a288-9e0a-40e9-834b-6516a420f269.json', '5dfaef83-c1b9-4fd4-b2fb-5732d7e84235.json', '62419a56-0985-48b4-ad05-ad710fc1ec0f.json', '64187a05-9385-4798-9697-b6daf4a2ab0d.json', '69b3c80e-c36a-4363-88ae-639c3a225a30.json', '69d6b8e7-d090-4e90-aca6-ff4572d82b97.json', '6c40c5d4-0b1f-4812-989c-3684540fb066.json', '6cb74380-6924-4ef9-814c-95de4378db15.json', '6e115233-af3b-42a3-9158-82384ba6e02b.json', '6f52b0be-3bce-4d84-bbc7-511499241f5d.json', '707dee0c-3551-4629-b6d3-a381aebb166f.json', '79e88b9e-615f-4f55-9241-31f329b23b4f.json', '7ce4e0b2-dd0a-4a6f-bafb-61cbd14acf3d.json', '7df1d934-48f7-43b0-96aa-d1b9eba1adfd.json', '827b2a96-16af-4596-abf0-1ff90f287dbe.json', '92a76e92-0dd0-4db7-b9cb-d72be4db11f6.json', '92d634f6-68a6-4871-8251-7be192d4c6b7.json', 'a0ae3bda-17d6-440a-a13d-baa057d51ce1.json', 'a1b430ba-15cb-4c31-9d19-830561710eae.json', 'a7428034-2d36-4200-b65e-9e6abd51a580.json', 'a7d55a3c-746e-4a5d-8021-89c0ec6ca610.json', 'b40441ed-c7e1-461e-a547-38e2af761f91.json', 'b57277ea-4b0d-4a14-9113-8b6000458a6b.json', 'b61c8ce7-75f7-4566-9908-4ac027f120e5.json', 'b7241576-b388-40b0-accf-eafdab6478ec.json', 'bba387c9-7d13-4b03-befa-44d47adbbfdf.json', 'bd27cf71-15c8-4924-8029-76160065c763.json', 'bd27d9e8-38cb-40da-9907-c2fe1395d297.json', 'bebdb6f6-c134-4c3a-8c3c-c154d8e60c5a.json', 'c785b52c-c7ac-4b08-b881-3740bc6e66c0.json', 'caf4cd8d-5b6b-4d68-b854-403d35d8557f.json', 'cb42f44d-92ee-48fe-801f-e9d3f4f49656.json', 'ddbcadba-f95c-4513-a947-c3deb10af92a.json', 'e39b5cae-156e-4ff5-a41b-ef1e85e64ed6.json', 'e462c794-5d1a-4cef-ac78-5b187002449c.json', 'e8d7be89-5c40-4fb2-b899-cb22175318c6.json', 'eb4003bb-8ef6-4aa7-a5ae-bdfd6ffff7e8.json', 'eba01fb4-798d-4285-85a2-72bf23f7ea6e.json', 'ee7614b8-0983-430a-9571-93d0da20f375.json', 'f110c81c-96c6-4c2e-a5b6-7958f8f57c5d.json', 'f2fb46db-2cb2-4ac5-9ef8-97ea77a847c1.json', 'f584352c-f56c-477a-8bb0-7425e0333284.json', 'f5eb0a1a-7237-4f05-9c76-fa2251c9c49b.json', 'fa293244-d10d-4e59-9ce5-b6a736cc355c.json', 'fc9f7536-32d2-4183-919f-57c36112a4aa.json', 'ff1bb0b6-3f73-4f2e-84cd-e32b1ab18697.json'],
+            ['008fc30f-e875-4ec2-9c6e-fd998d2f7893.json', '009062f0-dd86-4b7e-b140-4fad559de888.json', '00f63e92-12e0-48f4-9baf-1f56d7fa953f.json', '04d22318-3b08-4f00-a78e-86d65d5669af.json', '04dbc7ca-43da-45ff-8669-7e3958dc2ddc.json', '0522f36b-1eb9-485e-933a-0a3d65d76cbc.json', '05b5167a-9989-44bd-901b-14eb7441f157.json', '05f4b562-b254-42db-9126-b77fcf73aea7.json', '073f7763-07e2-43a9-8c7e-206ebc4195e1.json', '07eae587-be59-49b6-bab3-b3eba9b73511.json', '099bace5-a65a-4502-a142-43dca7704816.json', '0c4fb89d-be4e-4110-a0ec-fe0d66002283.json', '0c8da4d4-6591-4e63-bc17-9d6a8d09d22e.json', '0d1e7718-3e66-4676-8322-86005a26f201.json', '0d2b768a-5b91-4bae-a6ad-e5a9dc36c88e.json', '0d8495c1-0cf0-4e54-abfa-98e7ffb07ce2.json', '0e42c11b-b74e-40ad-8e79-276320386e15.json', '0ebe3e4a-7522-4668-9f80-fa6fd644cfba.json', '0f97b614-7c10-47c1-9991-f22d2c65313d.json', '104a5c7f-c57c-47e4-8ea5-22cf6446e77f.json', '1071cf8f-26fb-45f9-8540-2562d73c7c51.json', '10f7f914-6e10-4d50-80f0-28ee5ad189a0.json', '124d832c-7323-4e57-96bd-4c0c0c507f81.json', '129b6804-df3f-4370-984f-2ba92f9aba41.json', '130c239f-bfe8-4beb-b720-836ebc049e6a.json', '140f5957-25d2-4adb-a16a-3f884510de4d.json', '1696b4e5-d0d7-475c-99ee-460da3bc5e6f.json', '1799ebb0-75b6-4db6-91fe-144d4b1d23cc.json', '19f15d2d-ee26-47d1-aa40-3e834f4c23fb.json', '1adcc920-9845-454c-bd25-253492d8622f.json', '1af2e812-d1ac-4f84-856b-c4b97f592d32.json', '1b18bcaa-677e-42f1-b693-1c312a8c00fc.json', '1b7de9fe-6a42-49fd-a104-a459bc14d933.json', '1c13879f-ba16-4bec-b32d-f6c752d37cbe.json', '1c3741ab-1472-4806-9a81-f3a41200831a.json', '1cb6d9c4-3ef7-404c-a632-e5fff7aad953.json', '1cd8a77b-08ba-4ae5-ad14-ac3155c5e9ad.json', '1e649f5c-8043-41d8-be6c-2e3d467c3c2e.json', '2037df6f-b680-4c41-9396-920ddc718fec.json', '21224470-3f8c-42e3-8219-e4c12577b005.json', '212f7dca-8dd0-4ca3-849c-45922ae068ad.json', '22e21c9e-a5ac-40f3-bdd6-82cd13593666.json', '2303d221-2147-4bf1-9d03-28b4e9e894bf.json', '2333725e-c955-4122-a998-b9a63e26b030.json', '236f0ec9-b888-4e42-8faf-951eb51c953a.json', '25e84b79-fc0e-441c-991f-ad4873359744.json', '27234550-b338-4ad7-a6fd-6f4c3fea91c2.json', '272509b0-a573-4c9a-8c24-fba65fd00460.json', '27576604-dabb-4b04-8435-08c3bce190a4.json', '2762f78b-0862-49ea-a1c4-6635a732846a.json', '27aea0b6-b837-4287-ba3b-921aced8e981.json', '27b1f3e2-400f-43f5-b5d5-5bb029b8a87e.json', '28020332-1cd4-4576-837d-f1d79cb88d0c.json', '29740a36-2a3b-4fef-bea4-b6f17895fb4c.json', '29ca2a12-d4d2-4137-b6d9-c634b4749a23.json', '2bd02d6c-ce4a-479a-9941-60ac0054f0a5.json', '2cadb578-86c0-40fd-ac20-8bede6695b67.json', '2d3822be-d32d-4528-aaca-9cf5b5762380.json', '2de580d4-2d31-413c-9147-a3c6f466c59c.json', '2e1f8c61-58f7-4458-98db-f747eeeefda9.json', '2fdcf53c-70bb-497d-b79f-f192ad3168f5.json', '30caf647-5ed2-4f17-a5f1-7638c593c60c.json', '314cc8eb-3c4b-4c30-be70-70938b0da601.json', '323af0c7-9d98-4250-844c-7190d748b39e.json', '3258d596-9fb1-4930-a0a9-49c1f48a40af.json', '32e7308f-ff42-40d1-92f7-11aabcbfea9f.json', '3492c2b8-f5c8-4ca1-ac0b-0a10cd9bb605.json', '35cb1bcf-3d85-4a54-8a85-81cb91d39d95.json', '370136c7-1e81-4046-b4bf-d72267fbbcea.json', '378d1a97-1587-4c68-af34-2fb2303dad56.json', '3a4d26d2-0fe5-4f95-84d9-2e25a2f46f01.json', '3a9dde75-f09e-45b2-838a-17564017ad2f.json', '3d288c5f-33f2-4386-b282-335e6f90dfe2.json', '3e174ce8-9337-40f2-89d3-88f6357237cf.json', '3ecd4fe8-dc2f-42d3-8253-36d61662cfc0.json', '3f1b126e-5abd-4ff2-8784-ad201bb63e38.json', '3f1daf85-3c41-46ad-9c65-6ceb14909f90.json', '3f762c0e-ff40-4bf7-8e74-48581f387ecc.json', '4063182e-7131-403c-9c40-f7832316d6e4.json', '40a0af1f-5297-4857-9190-d806dda12494.json', '41255089-eef6-4d5e-bc83-3d560c1845fe.json', '413be5a8-b3b5-4223-8935-65faddd220eb.json', '41524a36-b284-4dcb-8972-fa6055c4abbe.json', '41de38f3-7ec2-49c4-9fa8-0cd739660e17.json', '42eac82a-f103-4fa9-b4e5-dab191b733c6.json', '4301ac59-5542-4138-8859-2f985a2a5e9a.json', '4336fd45-fd26-46fd-816e-561bfa100562.json', '43412b7a-e1f0-413a-b2e8-ee87ae6907e0.json', '4342c299-77f1-4fa3-a67b-5468c7d01cfe.json', '456c13db-ec6a-4fb7-94eb-9174a09a46d9.json', '4742ae67-631b-4d5e-886e-57256f76feae.json', '476ed7b5-c4ec-4340-88e6-c7e872fe2eb5.json', '47a437b0-7f97-4bf0-8607-e5ed59c9aa47.json', '47a87791-1bd3-45dd-a9be-83e8936cdd5f.json', '48374362-6fb3-4636-b5bf-2869ada7e9c9.json', '486675d5-770c-4753-b1ac-01471243ba51.json', '495462af-b25b-40cb-9b0c-17b81fae0fae.json', '4b00811a-81d1-441f-99fd-e64f11e18a4b.json', '4b419ce3-4e77-448c-bc26-fc2ad877dc48.json', '4c396a50-d0a8-4607-8a5b-feb60907ee04.json', '4d66d84c-a769-4268-805b-8d8200f2336f.json', '4e375127-2e7f-4dfe-a41c-bd8224dbb954.json', '4fa8e0a0-59a8-47c5-84f9-150505067c04.json', '4fc6cdf4-c76b-4ac0-a229-5fd4a3a19685.json', '50383e8c-ff12-4e3f-89dd-c2be98c1722d.json', '5474d55a-b287-4f22-9353-a90edcb2c17a.json', '5518dbb2-ed98-4f3e-861d-28bd8c077912.json', '55aef008-e5e5-4297-aac6-bd000d6e3f58.json', '56940f66-42d9-4ab5-ad00-de65508c4088.json', '571ab127-5b16-4eb9-a1d3-ad76a074bd8f.json', '580e801e-29c4-4948-ae09-bfe74d947ab9.json', '58ef9e5d-a131-445a-bac0-e1c042d885fa.json', '5a323811-915c-4b2f-bf04-cdcb09f12ce9.json', '5ac5eef3-06b4-4313-a7e8-ddbd26000467.json', '5b6e5eea-7491-4953-8dee-c6fa117357aa.json', '5f8daa71-4354-4cbe-b8d0-7bce3f5a95cb.json', '5fd903a2-4e8c-4f7d-8aa0-66066be48ab8.json', '603b39bd-73ef-4f17-b709-8228f40dd4b3.json', '62317f83-7d30-4a48-b5e2-b5863cba397c.json', '6551ccf5-f4bb-42ed-996f-6e62d51fbb2d.json', '66f5c097-6ab8-46cf-82d9-1d371498ec2d.json', '672eaa82-ea93-493f-9254-bf61d9c41f71.json', '6a202e78-8e08-4a76-bc70-f04cac633f61.json', '6a494f47-f42e-41d0-8b6d-da79bd871f52.json', '6b73ee36-0ba6-4a64-9d73-d12c89540f40.json', '6b87d473-dc99-4374-85de-833a8360f5c7.json', '6cd5b0cc-43a6-4809-a332-229f55a33499.json', '6d38b3ba-2580-43cd-b503-98629d94d1a3.json', '6e200840-5b6b-457e-8214-ad8c973c4c6c.json', '6ff06d3d-144c-4235-8ae6-4e6aa7ac8acb.json', '701ee8a2-fbc4-4ec9-a0e1-a2b5279026a7.json', '726eabdd-4fb6-4d49-8ee7-eb50b1fff67e.json', '73a00192-620d-41fb-b955-68265743e658.json', '74d1e88b-9b37-4899-a30c-d2a9867816f0.json', '74d8ac36-77ca-460e-bc0e-c18db4af1910.json', '754dc7fc-c65f-446f-825b-a6ddd17d78a2.json', '76c868bc-e560-4b7b-8570-a026ffa53d2f.json', '771234fb-1028-43c9-96ec-55fca4ccdedf.json', '772ec45f-09a8-4390-896e-03081d5d3f36.json', '789e2c86-016c-4771-96ef-137de4c82513.json', '78d297f4-d6ee-4bef-902a-dda3ef528af3.json', '7b610a32-c893-4959-a6f3-f282b731beab.json', '7b9cb347-cc4f-4fcc-a3e3-0e4a5936daa5.json', '7bd2f01c-2a3b-4055-b2c3-51be50e5cf94.json', '7e72e43f-f9f3-440a-aa0a-9fc940231e2b.json', '7fbd7d85-32db-4918-9f32-f33412dcd644.json', '80352521-07f4-488b-a04a-3afe84a5aff5.json', '813b23cb-952e-4770-a5a7-547eeb39e773.json', '81d59341-90c6-4478-842d-646d00c9b3fe.json', '82fb3d1f-99b7-42bd-ad36-efc575b27ef1.json', '83433c0d-f5a7-4ef8-a82f-ac939dda70fe.json', '835b2272-5159-4df1-9499-70af27371653.json', '83c6b9ea-cf00-4e4f-8ed2-0086e6418da4.json', '84833402-5f2a-433d-abb5-0428d88e7720.json', '87a816ff-c730-4333-8d4c-b9ceb0934caa.json', '8830b970-3a67-4781-84d0-c110d9196155.json', '89080e81-a4fb-43cf-a67e-dd550452ccbe.json', '8b446443-28fd-497a-8a65-a78f518576b5.json', '8bf9b3f7-5fcf-4a48-a87f-a2e80f31eee5.json', '8d1b42ad-578d-4d26-b132-4295f29b906f.json', '8fbc7d5a-9d7d-47c5-8f40-04b9842ece63.json', '901bad13-d836-4766-875a-d7056fe3faf7.json', '93819ced-ef7b-466a-ad24-22cf7576caa5.json', '93b30220-9930-4364-ac23-dae136c588b5.json', '948f8b88-01b0-4658-8ba3-196c6c2082e3.json', '9901def0-1718-457b-9b61-687c42b194dc.json', '9a914865-4eeb-45e1-8be3-025601f014d0.json', '9b204f2b-26f6-407b-83cb-0843754bed2e.json', '9ec871f7-315e-4157-9f92-203a3db78a05.json', '9f03acfb-68e7-4666-8188-e773613fdf9b.json', '9f616219-4da5-4f56-b77b-c644b6890c14.json', 'a0fe364e-0352-41e7-ae42-28eb5c2ba85a.json', 'a13a4f12-5d05-4ff0-b03b-0933ae022346.json', 'a14caca7-888f-4cba-a7c1-f756c5b46475.json', 'a1b165de-7ed5-4f68-9ba0-5a6e4f4f637b.json', 'a24ef51a-3415-4357-bad1-679d2ff1a8f3.json', 'a289f57c-b20c-45d1-a311-5709f9bbdcfc.json', 'a3511107-87b5-4730-a12e-72043b64f1bb.json', 'a440c232-e9c1-4fc2-901f-dc3258e63ab6.json', 'a49eaa91-863e-424c-8d1b-89e29f7811ef.json', 'a5ea39fe-f06b-4e6d-93c0-16af5e7a4ed7.json', 'a635624a-b9fe-47e2-a69b-95f1b54ee115.json', 'a7dd3d40-7d33-4139-8f37-45686bdfbede.json', 'a928b270-e1b0-4975-8d85-fd4e52721a7b.json', 'aa14a11f-af21-4126-96bd-ef6fd4abb561.json', 'aab24eb5-8a61-4be3-8ec9-79c85e7e8383.json', 'abb01241-d329-4836-ac8b-1782d141396e.json', 'ac64b58e-97d3-4bde-b649-1e582fc1d871.json', 'af70db4d-c38a-4eb4-a9f8-5a28c4d802ad.json', 'b142fe0c-003e-4b82-976d-c5593a789d11.json', 'b19024e8-183a-4551-88c7-5d8102842eb7.json', 'b1b22e33-cc3b-45dd-b2b4-480316010912.json', 'b3d8bea5-b49e-4275-a472-7c21a81c3788.json', 'b4f70aa6-1d8e-40da-8feb-ca02b5104359.json', 'b51e94d2-390c-473e-a8e7-caa155765376.json', 'b599048c-d807-46b3-8a22-d8bfa941246b.json', 'b712ba45-1c6b-4675-baaa-e772f6737ac0.json', 'b742602e-84f3-4050-a0fb-1d134ecb2932.json', 'b781b408-25fd-4e40-bea8-3b695b728f27.json', 'b7a18727-9a9a-4bec-80d1-efda45ea5521.json', 'b8d784c2-eeda-4104-85dd-d666bdb4dade.json', 'b920ecb3-4268-4bb5-822f-c68407514090.json', 'b94da6ec-fef3-4fdd-badd-b21d63f8b2c5.json', 'ba29e925-8b09-43d0-9057-65d8c6f9f55a.json', 'ba97f0c3-48d8-4a6f-8483-9c4ade6e4be0.json', 'bb0d5d09-3fed-4182-bb2b-faebd8466b41.json', 'bd52a03e-d0d2-4971-b1c7-9868a1d62c34.json', 'bd595906-c6f9-488f-beeb-039a63355f23.json', 'bdbde138-1c6e-4249-8933-4b65d1b0109e.json', 'bdda8ebb-1d88-4109-9050-e7f77a0d9675.json', 'be878917-4549-4c56-8b5b-04bfa3023ff2.json', 'bf0f44ac-2d19-47be-845a-00084d46f199.json', 'bfb8a05d-4ff7-43e4-8abf-895bfdbac411.json', 'c125b3b6-22b5-4457-a998-f8d8d4d062ec.json', 'c1ecb600-9f52-44a5-85bb-7c79bb23deec.json', 'c2207dbd-a7e8-4644-beb9-578c9f8276b0.json', 'c2890051-cd4c-489f-b76a-237a24c59993.json', 'c33ec77e-6f3d-492e-bab4-e3cbafeaeaf8.json', 'c514fa11-d87e-408c-8fe5-d008c3ce4d98.json', 'c56bd3ea-0201-4447-af43-085f0b2b5a59.json', 'c6b73393-9b65-46c8-926b-e98f95432c37.json', 'c707785b-3c56-47c2-a384-3a1c9116d9a2.json', 'c8f7d9cc-fff3-4471-bcd6-1dc3359e5667.json', 'ca3021c6-affe-4867-becf-8318e189283a.json', 'caf42556-9f56-41b5-8d75-df28b72a9c82.json', 'cb11808e-555f-4785-8e83-448510f97b8e.json', 'cb2282ef-769e-4f21-9c30-f94ab885d866.json', 'ccaa3818-61f2-49ec-a2ea-a7a80662c44d.json', 'ce616703-b4c3-4aef-94a0-774de9d20eb0.json', 'cffd5e8e-0de3-4464-82d4-9a999de96db6.json', 'd08d5c61-fcd7-4bf1-82c6-f750eb522d1d.json', 'd19d787f-abd7-406d-9539-03fc901c2d9a.json', 'd1b89bf0-c572-4eae-af12-b0c9c5617080.json', 'd3558df0-5c9e-437b-b39e-d37435fdfba2.json', 'd3e4b309-95e8-47a5-af0d-16f8ede7c658.json', 'd4bf3d18-c057-43e2-8ded-6b453f58a843.json', 'd4c6e6ec-4deb-43a4-9e57-f22ecb74e19b.json', 'd4e2bfa9-1115-4ecd-b6de-af78fc363480.json', 'd6bdbf55-0f1b-4ba2-9b24-e7c886de0ef3.json', 'd9e1a994-f67a-45cd-ac6d-ff34b12068e8.json', 'dae19344-38b2-4f5d-9301-4ab76eda29c1.json', 'daedea7c-8718-433e-a33d-cb60903cd2a3.json', 'db7f45b5-158c-43ae-b0e7-c0b2b96bb4e9.json', 'dbe04fd5-9343-47dc-96ea-428da2ac32d5.json', 'dc7cd3ec-a352-43e5-8330-4625c7318001.json', 'dcf2e4f7-84e1-40bf-8902-a2aed92df7c5.json', 'dd31c93c-e69e-4f2d-871c-97e6e830de7b.json', 'dd821d99-67f1-48e5-996a-32d7bb0decec.json', 'e00dbded-7ec4-4e31-a9d2-7a3918c13084.json', 'e02e5c15-2f02-4d7c-902b-247d60ea2e1f.json', 'e27b1385-bf25-4ca2-bbf4-701e90101e7e.json', 'e2a1da90-fe3c-494f-b7de-31ade1f1e518.json', 'e38b6111-937b-489a-8baf-23d1340e9c01.json', 'e4fe377a-b390-4d2f-b377-13e5372da7ba.json', 'e66ae7a9-c263-4291-bf07-21dfd8cdd8c5.json', 'e6c50433-1f12-4667-9e2e-537d8bfa9137.json', 'e6e06423-b588-478e-8269-1b1d5dfa8c9e.json', 'e7275588-282e-4a3f-b197-53f6c8caab19.json', 'e754d163-20b7-4999-9eb5-31c2968eddb1.json', 'e7618db4-0927-434a-b19c-161cf4bc459b.json', 'e88b80d1-a45f-4fd7-8b63-82c63416cb73.json', 'e8a42054-4242-46e8-8cda-cd79bff49bbe.json', 'e9943018-e6d6-4939-b23b-c983de456edc.json', 'e995d11f-8290-4b8a-a0e6-56a981cabc6d.json', 'eadfc58a-ac02-41dc-b9c8-47b84f7a2142.json', 'eb93522e-4e45-4104-91ab-f0b09f0ecdde.json', 'ec0156ed-6b26-4cac-bdb4-6e0d907bcd5c.json', 'ec502264-f8f8-412c-86b9-c08e292deacf.json', 'ed2e760d-a9f1-41d4-802f-8b76a7543c9d.json', 'edef2ea3-f20d-44df-9b17-f57def3691e1.json', 'ee57fd3f-593e-480f-b522-46485ba2b443.json', 'eeaf3012-b739-43d3-be45-c029154d6a5c.json', 'f045ccdd-bece-46a4-97cd-fcb3fde20e2c.json', 'f0c396a6-f760-4af0-850f-1466bfaed8e4.json', 'f0c4430a-0887-4037-b4b2-b35256a30142.json', 'f19036ec-cf1c-4a88-874e-8ad417143011.json', 'f1990b3d-66fb-4379-af87-ae6146931f73.json', 'f31420eb-63d6-4890-afa1-1445c799f20d.json', 'f4025109-97d9-43e7-b716-d3bf69eeedaa.json', 'f49a2000-c44b-456c-9460-76a1bf3d1b7d.json', 'f5661961-1993-40f9-be45-9b758a20e54e.json', 'f58d172f-b4f3-402c-86e0-edf5f9240656.json', 'f7af5f8e-9030-46de-aef4-4336788179a6.json', 'f82d7c1d-013a-4a2c-9d13-4a12d2e1ffd0.json', 'f8fb387d-11f9-4cac-b2c5-ad08e960b30c.json', 'f999cc7e-14dd-4d18-a131-7ef9a655335b.json', 'f9b6db08-a2f8-43f0-9aae-8d9760ce58a9.json', 'fb046f56-1448-4ce9-963d-8fcb715a0814.json', 'fb4ec330-1b6f-4aab-bdc4-fd38ea7810b5.json', 'fc24aced-d321-4851-8021-a55e31831d39.json', 'fc497420-e09a-47e1-9e41-e7f04826fcb2.json', 'fd0ff56a-cd0c-4d37-b12a-f84eced5bef9.json']
+        ];
+
+        console.log(jFiles);
+
+        //
+        var loader = new THREE.ObjectLoader();
+
+        /*
+        * JSON LOADER
+        * should be replaced with access key objects from Flux
+        */
+
+        // All Meshes -  incomplete
+
+//            for(j=0; j< subFolders.length; j++){
+//                for(i=0;i< jFiles[j].length;i++){
+//                    loader.load('model/'+subFolders[j]+'/model/'+jFiles[j][i], function ( geometry, materials ) {
+//                        var materialObj = new THREE.MeshFaceMaterial( materials );
+//                        geometry.traverse(function(child) {
+//                            if (child instanceof THREE.Mesh) {
+//                                child.material = materialObj;
+//                            }
+//                        })
+//                        scene.add( geometry );
+//                        subObjects.push(geometry.children[0]);
+//                    });
+//                }
+//                console.log(subObjects);  
+//            }
+
+        // Karamba Meshes
+
+        for(i=0;i< jFiles[0].length;i++){
+            loader.load('model/'+subFolders[0]+'/model/'+jFiles[0][i], function ( geometry, materials ) {
+                var materialObj = new THREE.MeshFaceMaterial( materials );
+                geometry.traverse(function(child) {
+                    if (child instanceof THREE.Mesh) {
+                        child.material = materialObj;
+                    }
+                })
+                scene.add( geometry );
+                subObjects.push(geometry.children[0]);
+            });
+        }
+
+        // Beam Meshes
+
+//            for(i=0;i< jFiles[1].length;i++){
+//                loader.load('model/'+subFolders[1]+'/model/'+jFiles[1][i], function ( geometry, materials ) {
+//                    var materialObj = new THREE.MeshFaceMaterial( materials );
+//                    geometry.traverse(function(child) {
+//                        if (child instanceof THREE.Mesh) {
+//                            child.material = materialObj;
+//                        }
+//                    })
+//                    scene.add( geometry );
+//                    subObjects.push(geometry.children[0]);
+//                });
+//            }
+
+        // Connection Meshes
+
+//            for(i=0;i< jFiles[2].length;i++){
+//                loader.load('model/'+subFolders[1]+'/model/'+jFiles[2][i], function ( geometry, materials ) {
+//                    var materialObj = new THREE.MeshFaceMaterial( materials );
+//                    geometry.traverse(function(child) {
+//                        if (child instanceof THREE.Mesh) {
+//                            child.material = materialObj;
+//                        }
+//                    })
+//                    scene.add( geometry );
+//                    subObjects.push(geometry.children[0]);
+//                });
+//            }
+
+        // Joint Meshes
+
+//            for(i=0;i< jFiles[3].length;i++){
+//                loader.load('model/'+subFolders[3]+'/model/'+jFiles[3][i], function ( geometry, materials ) {
+//                    var materialObj = new THREE.MeshFaceMaterial( materials );
+//                    geometry.traverse(function(child) {
+//                        if (child instanceof THREE.Mesh) {
+//                            child.material = materialObj;
+//                        }
+//                    })
+//                    scene.add( geometry );
+//                    subObjects.push(geometry.children[0]);
+//                });
+//            }
+
+
+
+        /**
+        * Visibility Buttons
+        * incomplete
+        * toggles visibility of object arrays
+        */
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+            var docFrag= document.createDocumentFragment();
+
+            for(i=0; i < subFolders.length; i++){
+                var btn = document.createElement('button');
+                btn.setAttribute('value', subFolders[i]);
+                docFrag.appendChild(btn);
+            }
+            $("#menu").appendChild(docFrag);
+        });
+
+        console.log($("#menu"));
+
+        /**
+        * Sprite Materials
+        * Selected/non-selected
+        */
+
+        var PI2 = Math.PI * 2;
+        particleMaterial = new THREE.SpriteCanvasMaterial({
+            color: 0x000000,
+            program: function(context) {
+                context.beginPath();
+                context.arc(0, 0, 0.5, 0, PI2, true);
+                context.fill();
+            }
+        });
+        particleMaterialSelected = new THREE.SpriteCanvasMaterial({
+            color: 0x00ccff,
+            program: function(context) {
+                context.beginPath();
+                context.arc(0, 0, 0.5, 0, PI2, true);
+                context.fill();
+            }
+        });
+
+        /**
+        * Adding eventlisteners to three.js scene
+        */
+
+        window.addEventListener('mousedown', addCommentSprite, false);
+        window.addEventListener('touchstart', onDocumentTouchStart, false);
+
+
+        //Default eventlisteners 
+
+        window.addEventListener('resize', onWindowResize, false);
+
+        controls.addEventListener('change', render);
+
+        // Grid and XYZ axis
+
+        grid();
+
+        var axisHelper = new THREE.AxisHelper(20);
+        scene.add(axisHelper);
+    }
+
+    /**
+    * Grid
+    * 20 x 20
+    */
+
+    function grid() {
+        var geometry = new THREE.Geometry();
+        var material = new THREE.LineBasicMaterial({
+            color: 'white'
+        });
+
+        var size = 20,
+            step = 1;
+
+        for (var i = -size; i <= size; i += step) {
+            geometry.vertices.push(new THREE.Vector3(-size, -0.01, i));
+            geometry.vertices.push(new THREE.Vector3(size, -0.01, i));
+
+            geometry.vertices.push(new THREE.Vector3(i, -0.01, -size));
+            geometry.vertices.push(new THREE.Vector3(i, -0.01, size));
+        }
+
+        var line = new THREE.Line(geometry, material, THREE.LinePieces);
+
+        scene.add(line);
+    }
+
+    /**
+    * Window Resize
+    */
+
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+    }
+
+    //
+
+    function onDocumentTouchStart(event) {
+
+        event.preventDefault();
+
+        event.clientX = event.touches[0].clientX;
+        event.clientY = event.touches[0].clientY;
+        onDocumentMouseDown(event);
+
+    }
+
+    /**
+    * Comment Sprites
+    */
+
+    function addCommentSprite(event) {
+
+        mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+        mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        var intersects = raycaster.intersectObjects(subObjects);
+
+        var intersectsS = raycaster.intersectObjects(spheres);
+
+        var count = 0;
+
+        switch (event.which) {
+            case 1: // Left Click - Add Sprite/Tag
+                if (intersects.length > 0) {
+
+                    particle = new THREE.Sprite(particleMaterial);
+                    geo = new THREE.SphereGeometry(0.05);
+                    material = new THREE.MeshBasicMaterial({
+                        opacity: 0
+                    });
+
+                    // Add invisible raycaster-enabled meshes
+                    sphere = new THREE.Mesh(geo, material);
+                    sphere.position.copy(intersects[0].point);
+                    scene.add(sphere);
+                    spheres.push(sphere);
+
+                    // Add Sprite
+                    particle.position.copy(intersects[0].point);
+                    particle.scale.x = particle.scale.y = 0.05;
+                    scene.add(particle);
+                    particles.push(particle);
+
+                    // Add Sprite Tag - incomplete
+                    var spritey = makeTagSprite("Hello World");
+                    console.log(spritey);
+                    spritey.position.copy(intersects[0].point);
+                    scene.add(spritey);
+                    spriteys.push(spritey);
+                }
+                break;
+            case 2: // Middle Click - Delete Sprite
+                if (intersectsS.length > 0) {
+                    var SELECTED = intersectsS[0].object;
+                    var deleteId = spheres.indexOf(SELECTED);
+                    
+                    spheres[deleteId].visible = false;
+                    particles[deleteId].visible = false;
+                }
+                break;
+            case 3: // Right Click - Select Sprite
+                if (intersectsS.length > 0) {
+                    
+                    textInput.disabled = false;
+                    textAreaDiv.disabled = false;
+                    var SELECTED = intersectsS[0].object;
+                    console.log(SELECTED);
+                    selectedId = spheres.indexOf(SELECTED);
+                    console.log(selectedId);
+                    // Change sprite color if selected/non-selected
+                    for(i=0; i<particles.length; i++){
+                        if( i == selectedId ){
+                            particles[i].material = particleMaterialSelected;
+                        } else {
+                            particles[i].material = particleMaterial;
+                        }
+                    }
+                   $('.sidebar-brand').empty();
+                   $('.sidebar-brand').append("No. " + (selectedId+1)); 
+                    commentDiv();
+                }
+                break;
+        }
+    }
+
+    function makeTagSprite(text) {
+        var font = "Helvetica",
+            size = 18,
+            color = "#ffffff";
+
+        font = "bold " + size + "px " + font;
+
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+        context.font = font ;
+
+        var metrics = context.measureText(text),
+            textwidth = metrics.width;
+        canvas.width = textwidth + 3;
+        canvas.height = size + 3;
+        context.textAlign = 'right';
+        context.fillStyle = "rgba(255,255,255,1)";
+        context.fillText(text, 0, size);
+        context.font = font;
+
+        var texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        
+        var spriteMaterial = new THREE.SpriteMaterial(
+            {map: texture, useScreenCoordinates: false} );
+                
+        var sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(100,50,1.0);
+        return sprite;
+    }
+
+    function commentDiv(){
+        $("#comments").val("");
+        for(i=0; i<messages[selectedId].length;i++){
+            $("#comments").val($("#comments").val()+messages[selectedId][i]+"\n\n");
+        }
+    }
+
+    $("form").submit(function(e) {
+        e.preventDefault();
+        console.log(textAreaDiv.value);
+        var particleMessage = textAreaDiv.value; 
+        if(messages[selectedId] == undefined && textAreaDiv.value !== ""){
+            messages[selectedId] = [];
+            messages[selectedId].push(textInput.value+': '+particleMessage);
+        } else if(textAreaDiv.value !== "") {
+            messages[selectedId].push(textInput.value+': '+particleMessage);
+            console.log(selectedId);
+        }
+        commentDiv();
+        console.log(messages);
+        textAreaDiv.value = "";
+    });
+
+    function animate() {
+
+        requestAnimationFrame(animate);
+
+        render();
+
+        controls.update();
+    }
+
+    function render() {
+
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+
+    }
+
+    </script>
+</body>
+
+</html>
